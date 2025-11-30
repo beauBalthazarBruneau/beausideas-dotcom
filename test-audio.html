@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>House Music Generator Test</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: #fff;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      color: #e94560;
+      text-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+      margin-bottom: 10px;
+    }
+    .subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 30px;
+    }
+    .main-controls {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+    button {
+      padding: 15px 40px;
+      font-size: 18px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      font-weight: bold;
+    }
+    #startBtn {
+      background: linear-gradient(45deg, #e94560, #ff6b6b);
+      color: white;
+    }
+    #startBtn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 30px rgba(233, 69, 96, 0.6);
+    }
+    #stopBtn {
+      background: #333;
+      color: white;
+    }
+    #stopBtn:hover {
+      background: #555;
+    }
+    .section {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .section h2 {
+      margin-top: 0;
+      color: #e94560;
+      font-size: 16px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .volume-control {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    .volume-control label {
+      min-width: 100px;
+    }
+    input[type="range"] {
+      flex: 1;
+      height: 8px;
+      -webkit-appearance: none;
+      background: #333;
+      border-radius: 4px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: #e94560;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+    .elements-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .element-btn {
+      padding: 12px 20px;
+      font-size: 14px;
+      border-radius: 6px;
+      background: #333;
+      color: #888;
+    }
+    .element-btn.active {
+      background: linear-gradient(45deg, #e94560, #ff6b6b);
+      color: white;
+    }
+    .element-btn:hover {
+      transform: scale(1.02);
+    }
+    .status {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+    .status-item {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 10px 15px;
+      border-radius: 6px;
+    }
+    .status-label {
+      color: #888;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+    .status-value {
+      font-size: 18px;
+      font-weight: bold;
+      color: #e94560;
+    }
+    .sweep-controls {
+      display: flex;
+      gap: 10px;
+    }
+    .sweep-controls button {
+      flex: 1;
+      padding: 12px;
+      font-size: 14px;
+      background: #333;
+    }
+    .sweep-controls button:hover {
+      background: #555;
+    }
+    .visualizer {
+      height: 100px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: 4px;
+      padding: 10px;
+      overflow: hidden;
+    }
+    .bar {
+      width: 8px;
+      background: linear-gradient(to top, #e94560, #ff6b6b);
+      border-radius: 4px 4px 0 0;
+      transition: height 0.1s ease;
+    }
+    .instructions {
+      background: rgba(233, 69, 96, 0.1);
+      border: 1px solid rgba(233, 69, 96, 0.3);
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 20px;
+    }
+    .instructions h3 {
+      margin-top: 0;
+      color: #e94560;
+    }
+    .instructions code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'Monaco', 'Consolas', monospace;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>House Music Generator</h1>
+    <p class="subtitle">Procedural house music using Web Audio API</p>
+
+    <div class="main-controls">
+      <button id="startBtn" onclick="startMusic()">START</button>
+      <button id="stopBtn" onclick="stopMusic()">STOP</button>
+    </div>
+
+    <div class="section">
+      <h2>Visualizer</h2>
+      <div class="visualizer" id="visualizer"></div>
+    </div>
+
+    <div class="section">
+      <h2>Master Volume</h2>
+      <div class="volume-control">
+        <label>Volume</label>
+        <input type="range" id="volumeSlider" min="0" max="100" value="70" oninput="setVolume(this.value)">
+        <span id="volumeValue">70%</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Elements (Click to Toggle)</h2>
+      <div class="elements-grid">
+        <button class="element-btn active" id="btn-kick" onclick="toggleElement('kick')">Kick</button>
+        <button class="element-btn" id="btn-hihat" onclick="toggleElement('hihat')">Hi-Hat</button>
+        <button class="element-btn" id="btn-clap" onclick="toggleElement('clap')">Clap</button>
+        <button class="element-btn" id="btn-shaker" onclick="toggleElement('shaker')">Shaker</button>
+        <button class="element-btn" id="btn-conga" onclick="toggleElement('conga')">Conga</button>
+        <button class="element-btn" id="btn-bass" onclick="toggleElement('bass')">Bass</button>
+        <button class="element-btn" id="btn-chord" onclick="toggleElement('chord')">Chords</button>
+        <button class="element-btn" id="btn-pad" onclick="toggleElement('pad')">Pad</button>
+        <button class="element-btn" id="btn-perc" onclick="toggleElement('perc')">Percussion</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Filter Sweeps</h2>
+      <div class="sweep-controls">
+        <button onclick="triggerSweep(-1)">Sweep Down</button>
+        <button onclick="triggerSweep(1)">Sweep Up</button>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Status</h2>
+      <div class="status">
+        <div class="status-item">
+          <div class="status-label">Section</div>
+          <div class="status-value" id="sectionValue">0</div>
+        </div>
+        <div class="status-item">
+          <div class="status-label">Beat</div>
+          <div class="status-value" id="beatValue">0</div>
+        </div>
+        <div class="status-item">
+          <div class="status-label">Chord</div>
+          <div class="status-value" id="chordValue">-</div>
+        </div>
+        <div class="status-item">
+          <div class="status-label">BPM</div>
+          <div class="status-value" id="bpmValue">124</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="instructions">
+      <h3>How it works</h3>
+      <p>This is a procedural house music generator that creates an endless, evolving track. The arrangement automatically cycles through 16 sections, bringing elements in and out to create tension and release.</p>
+      <p><strong>Features:</strong></p>
+      <ul>
+        <li>Four-on-the-floor kick at 124 BPM</li>
+        <li>Offbeat hi-hats with occasional open hats</li>
+        <li>Claps on beats 2 and 4</li>
+        <li>Syncopated bassline following the chord progression</li>
+        <li>Rhodes-style 7th chord stabs</li>
+        <li>Warm sustaining pads</li>
+        <li>Congas and percussion for groove</li>
+        <li>Reverb, delay, and filter sweep effects</li>
+      </ul>
+      <p><strong>Console API:</strong> <code>HouseMusic.start()</code>, <code>HouseMusic.stop()</code>, <code>HouseMusic.toggleElement('kick')</code></p>
+    </div>
+  </div>
+
+  <script type="module">
+    // Import the audio module
+    import HouseMusic from './src/audio.js';
+
+    // Make it globally accessible
+    window.HouseMusic = HouseMusic;
+    window.audioModule = HouseMusic;
+
+    // Create visualizer bars
+    const visualizer = document.getElementById('visualizer');
+    for (let i = 0; i < 32; i++) {
+      const bar = document.createElement('div');
+      bar.className = 'bar';
+      bar.style.height = '10px';
+      visualizer.appendChild(bar);
+    }
+
+    // Global functions for button handlers
+    window.startMusic = function() {
+      HouseMusic.start();
+      document.getElementById('startBtn').style.opacity = '0.5';
+    };
+
+    window.stopMusic = function() {
+      HouseMusic.stop();
+      document.getElementById('startBtn').style.opacity = '1';
+    };
+
+    window.setVolume = function(value) {
+      HouseMusic.setVolume(value / 100);
+      document.getElementById('volumeValue').textContent = value + '%';
+    };
+
+    window.toggleElement = function(element) {
+      const isActive = HouseMusic.toggleElement(element);
+      const btn = document.getElementById('btn-' + element);
+      if (isActive) {
+        btn.classList.add('active');
+      } else {
+        btn.classList.remove('active');
+      }
+    };
+
+    window.triggerSweep = function(direction) {
+      HouseMusic.triggerFilterSweep(direction);
+    };
+
+    // Update UI periodically
+    function updateUI() {
+      if (HouseMusic.isPlaying()) {
+        const status = HouseMusic.getCurrentSection();
+        document.getElementById('sectionValue').textContent = status.section + 1;
+        document.getElementById('beatValue').textContent = status.totalBeats;
+
+        const chordNames = {
+          57: 'Am7',
+          62: 'Dm7',
+          55: 'G7',
+          60: 'Cmaj7'
+        };
+        document.getElementById('chordValue').textContent = chordNames[status.chord.root] || '-';
+
+        // Update element buttons based on arrangement
+        const arrangement = HouseMusic.getArrangement();
+        Object.keys(arrangement).forEach(key => {
+          const btn = document.getElementById('btn-' + key);
+          if (btn) {
+            if (arrangement[key].active) {
+              btn.classList.add('active');
+            } else {
+              btn.classList.remove('active');
+            }
+          }
+        });
+
+        // Animate visualizer
+        const bars = visualizer.querySelectorAll('.bar');
+        bars.forEach((bar, i) => {
+          const height = 10 + Math.random() * 70;
+          bar.style.height = height + 'px';
+        });
+      } else {
+        // Reset visualizer when stopped
+        const bars = visualizer.querySelectorAll('.bar');
+        bars.forEach(bar => {
+          bar.style.height = '10px';
+        });
+      }
+
+      requestAnimationFrame(updateUI);
+    }
+
+    updateUI();
+
+    console.log('House Music Generator loaded! Click START to begin.');
+  </script>
+</body>
+</html>
